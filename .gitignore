@@ -1,0 +1,6 @@
+.env
+.DS_Store
+node_modules/
+*.log
+# generated on the server by composer install (packages are resolved there)
+backend/composer.lock

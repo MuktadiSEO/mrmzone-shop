@@ -1,0 +1,101 @@
+# MRM Zone Shop — production stack for a single Ubuntu VPS (Contabo).
+#   caddy      → automatic HTTPS for mrmzone.shop and api.mrmzone.shop
+#   web        → Next.js storefront + admin panel (port 3000, internal)
+#   api        → Laravel API (PHP 8.3 + Nginx, port 8080, internal)
+#   scheduler  → Laravel scheduler (courier status sync, cleanups)
+#   queue      → Laravel queue worker
+#   mysql      → MySQL 8.4 database
+# Usage:  cp .env.example .env  →  edit  →  docker compose up -d --build
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web, api]
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_URL: https://${API_DOMAIN}/api/v1
+        NEXT_PUBLIC_SITE_URL: https://${SITE_DOMAIN}
+        NEXT_PUBLIC_DEMO_MODE: "false"
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: https://${API_DOMAIN}/api/v1
+      NEXT_PUBLIC_SITE_URL: https://${SITE_DOMAIN}
+      # server-side rendering talks to the API over the internal network (faster)
+      API_INTERNAL_URL: http://api:8080/api/v1
+    depends_on: [api]
+
+  api: &api
+    build: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      DB_HOST: mysql
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_URL: https://${API_DOMAIN}
+      CORS_ALLOWED_ORIGINS: https://${SITE_DOMAIN},https://www.${SITE_DOMAIN}
+    volumes:
+      - uploads:/var/www/html/storage/app/public
+      - api_logs:/var/www/html/storage/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  scheduler:
+    <<: *api
+    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    environment:
+      DB_HOST: mysql
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_URL: https://${API_DOMAIN}
+      AUTORUN_ENABLED: "false"
+
+  queue:
+    <<: *api
+    command: ["php", "/var/www/html/artisan", "queue:work", "--tries=3", "--sleep=3"]
+    environment:
+      DB_HOST: mysql
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_URL: https://${API_DOMAIN}
+      AUTORUN_ENABLED: "false"
+
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  caddy_data:
+  caddy_config:
+  mysql_data:
+  uploads:
+  api_logs:

@@ -1,0 +1,20 @@
+{
+	email {$ACME_EMAIL}
+}
+
+# Storefront + admin panel
+{$SITE_DOMAIN}, www.{$SITE_DOMAIN} {
+	encode zstd gzip
+	@www host www.{$SITE_DOMAIN}
+	redir @www https://{$SITE_DOMAIN}{uri} permanent
+	reverse_proxy web:3000
+}
+
+# Laravel API (+ uploaded images under /storage)
+{$API_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 25MB
+	}
+	reverse_proxy api:8080
+}
