@@ -178,10 +178,9 @@ class OrderController extends Controller
         $order = Order::with('items')->findOrFail($id);
         $s = Setting::all_values();
 
-        return response()->json(['data' => [
-            'order' => (new OrderResource($order))->resolve(request()),
+        return (new OrderResource($order))->additional([
             'store' => ['name' => $s['store_name'], 'phone' => $s['store_phone'], 'address' => $s['store_address'], 'email' => $s['store_email'], 'logo' => $s['store_logo'], 'website' => 'mrmzone.shop'],
-        ]]);
+        ]);
     }
 
     public function destroy(int $id)

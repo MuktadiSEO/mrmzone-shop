@@ -125,3 +125,15 @@ Order statuses: `pending` (নতুন), `confirmed` (কনফার্মড)
 | Activity | `GET /admin/activity-logs` |
 
 Role permissions: `admin` everything; `manager` everything except staff & settings; `staff` orders, incomplete orders, customers, fraud check, POS.
+
+---
+
+## Notes from integration (implemented)
+
+- `ProductCard` also includes `has_variants` (boolean) — cards send color/size products to the product page instead of adding straight to cart.
+- Banners: `position` is `slider` (main hero slider) or `side` (right-side banners); plus `sort_order`, `is_active`.
+- `GET /admin/orders/{id}/invoice` → `{ data: Order, store: { name, phone, address, email, logo, website } }`.
+- `GET/PUT /admin/settings` uses a nested shape:
+  `{ store: {name, tagline, phone, whatsapp, email, address, facebook, logo, announcement}, delivery: {inside_dhaka, outside_dhaka, free_delivery_min_qty}, courier: {default, steadfast: {api_key, secret_key}, pathao: {base_url, client_id, client_secret, username, password, store_id}, redx: {token, default_area_id}}, sms: {provider: 'log'|'bulksmsbd', api_key, sender_id}, tracking: {meta_pixel_id, gtm_id}, fraud: {api_key, api_url}, sms_templates: {order_placed, order_confirmed, order_shipped, enabled: {order_placed, order_confirmed, order_shipped}}, inventory: {low_stock_threshold} }`.
+  PUT accepts any subset of it.
+- Admin single-order endpoints (`GET/PUT /admin/orders/{id}`, `/status`, `/courier`, `/courier/refresh`) all return `{ data: Order }`.

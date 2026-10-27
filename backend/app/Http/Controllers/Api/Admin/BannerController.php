@@ -24,7 +24,7 @@ class BannerController extends CrudController
             'image' => ($item ? 'sometimes|' : '').'required|string|max:500',
             'link' => 'nullable|string|max:500',
             'button_text' => 'nullable|string|max:50',
-            'position' => 'nullable|in:hero,side,promo',
+            'position' => 'nullable|in:slider,side,hero,promo',
             'sort_order' => 'nullable|integer',
             'is_active' => 'boolean',
         ];

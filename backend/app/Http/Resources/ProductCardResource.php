@@ -20,6 +20,7 @@ class ProductCardResource extends JsonResource
             'final_price' => $this->final_price,
             'discount_percent' => $this->discount_percent,
             'in_stock' => $this->total_stock > 0,
+            'has_variants' => $this->relationLoaded('variants') ? $this->variants->isNotEmpty() : $this->variants()->exists(),
             'rating' => round((float) ($this->reviews_avg_rating ?? 0), 1),
             'reviews_count' => (int) ($this->reviews_count ?? 0),
             'badge' => $this->badge,

@@ -98,7 +98,7 @@ return new class extends Migration
             $table->string('image');
             $table->string('link')->nullable();
             $table->string('button_text')->nullable();
-            $table->string('position', 20)->default('hero');
+            $table->string('position', 20)->default('slider');
             $table->unsignedInteger('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

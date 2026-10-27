@@ -157,7 +157,8 @@ class AdminTest extends TestCase
         $this->postJson('/api/v1/admin/coupons', ['code' => 'eid50', 'type' => 'fixed', 'value' => 50], $this->auth)->assertCreated()->assertJsonPath('data.code', 'EID50');
         $this->postJson('/api/v1/admin/expenses', ['category' => 'Facebook Ads', 'amount' => 1500, 'date' => now()->toDateString()], $this->auth)->assertCreated();
         $this->postJson('/api/v1/admin/banners', ['title' => 'Eid', 'image' => 'https://example.com/b.jpg'], $this->auth)->assertCreated();
-        $this->putJson('/api/v1/admin/settings', ['delivery_inside_dhaka' => 60, 'meta_pixel_id' => '123'], $this->auth)->assertOk();
+        $this->putJson('/api/v1/admin/settings', ['delivery' => ['inside_dhaka' => 60], 'tracking' => ['meta_pixel_id' => '123'], 'sms_templates' => ['enabled' => ['order_placed' => false]]], $this->auth)->assertOk()
+            ->assertJsonPath('data.delivery.inside_dhaka', 60)->assertJsonPath('data.sms_templates.enabled.order_placed', false)->assertJsonPath('data.courier.default', 'steadfast');
         $this->getJson('/api/v1/settings')->assertJsonPath('delivery.inside_dhaka', 60)->assertJsonPath('meta_pixel_id', '123');
 
         $this->postJson('/api/v1/admin/staff', ['name' => 'Desk', 'email' => 'desk@test.com', 'password' => 'password123', 'role' => 'staff'], $this->auth)->assertCreated();

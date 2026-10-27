@@ -86,7 +86,7 @@ class DatabaseSeeder extends Seeder
 
         Banner::firstOrCreate(['title' => 'প্রয়োজনের সবকিছু, এক জায়গায়'], [
             'subtitle' => 'মানসম্মত পণ্য · সাশ্রয়ী দাম · সারা বাংলাদেশে ক্যাশ অন ডেলিভারি',
-            'image' => '', 'link' => '/products', 'button_text' => 'এখনই কিনুন', 'position' => 'hero',
+            'image' => '', 'link' => '/products', 'button_text' => 'এখনই কিনুন', 'position' => 'slider',
         ]);
         Coupon::firstOrCreate(['code' => 'MRMZONE10'], ['type' => 'percent', 'value' => 10, 'min_order' => 500, 'max_discount' => 200]);
         LandingPage::firstOrCreate(['slug' => 'winter-shawl-offer'], [
